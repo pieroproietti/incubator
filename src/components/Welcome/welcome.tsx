@@ -35,7 +35,7 @@
    return (
      <>
       <Title />
-      <Steps step={2} />
+      <Steps step={1} />
      </>
    )
  }

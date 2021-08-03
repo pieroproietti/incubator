@@ -16,44 +16,44 @@ const Titolo = styled.h1`
   color: white;
 `
 
-
 const Wrapper = styled.section`
-padding: 4em;
+padding: 1em;
 background: black;
 `
-const Flag = styled.section`
+const Flag = styled.div`
+display: flex;
 flex-direction: row;
 `
 
-const Green = styled.section`
+const Green = styled.div`
+width: 30vh;
 background: green;
-flex-direction: column;
+flex-direction: row;
 `
 
-const White = styled.section`
+const White = styled.div`
+width: 30vh;
 background: white;
-flex-direction: column;
+flex-direction: row;
 `
 
-const Red = styled.section`
+const Red = styled.div`
+width: 30vh;
 background: red;
-flex-direction: column;
+flex-direction: row;
 `
 
 
-export default function Title({ title = "hatching" }) {
+export default function Title({ title = "camarones" }) {
    return (
       <>
          <div>
-            <Wrapper>
             <Titolo>{title}</Titolo>
-            This apparat can help penguin's eggs to grow up!
             <Flag>
                <div><Green>green</Green></div>
                <div><White>white</White></div>
                <div><Red>red</Red></div>
             </Flag>
-            </Wrapper>
          </div>
       </>
    )

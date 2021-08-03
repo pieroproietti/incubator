@@ -1,12 +1,12 @@
 import React from 'react'
 import { render } from 'react-dom'
-
+import styled from 'styled-components'
 
 type stepsPros = {
    step?: number,
 }
 
-export default function Steps({ step = 1 }: stepsPros) {
+export default function Steps({ step }: stepsPros) {
    let activeWelcome = false
    let activeLocation = false
    let activeKeyboard = false
@@ -40,10 +40,10 @@ export default function Steps({ step = 1 }: stepsPros) {
    return (
       <>
          <div >
-            <WelcomeTab active={activeWelcome} />
-            <LocationTab active={activeLocation} />
-            <KeyboardTab active={activeKeyboard} />
-            <PartitionTab active={activePartitions} />
+            <WelcomeTab active={activeWelcome}/>
+            <LocationTab active={activeLocation}/>
+            <KeyboardTab active={activeKeyboard}/>
+            <PartitionTab active={activePartitions}/>
             <UsersTab active={activeUsers} />
             <NetworkTab active={activeNetwork} />
             <SummaryTab active={activeSummary} />
@@ -59,93 +59,53 @@ type elementType = {
    active?: boolean
 }
 
-function WelcomeTab({ active = false }): JSX.Element {
-   let backgroundColor = 'white'
-   let color = 'black'
+const Tab = styled.div`
+width: 15vh;
+background: ${props => props.activated ? "black" : "white"};
+color: ${props => props.activated ? "white" : "black"};
+`
+
+function activateTab( label = '', active = false ): JSX.Element {
+   let elem = <Tab >{label}</Tab>
    if (active) {
-      backgroundColor = 'black'
-      color = 'white'
+      elem = <Tab activated >{label}</Tab>
    }
-   return <div color={color} background-color={backgroundColor}> Welcome    </div>
+   return elem
+}
+
+
+function WelcomeTab({ active = false }): JSX.Element {
+   return activateTab('Welcome', active)
 }
 
 function LocationTab({ active = false }): JSX.Element {
-   let backgroundColor = 'white'
-   let color = 'black'
-   if (active) {
-      backgroundColor = 'black'
-      color = 'white'
-   }
-   return <div color={color} background-color={backgroundColor}> Location   </div>
+   return activateTab('Location', active)
 }
 
 function KeyboardTab({ active = false }): JSX.Element {
-   let backgroundColor = 'white'
-   let color = 'black'
-   if (active) {
-      backgroundColor = 'black'
-      color = 'white'
-   }
-   return <div color={color} background-color={backgroundColor}> Keyboard   </div>
+   return activateTab('Keyboard', active)
 }
 
-
 function PartitionTab({ active = false }): JSX.Element {
-   let backgroundColor = 'white'
-   let color = 'black'
-   if (active) {
-      backgroundColor = 'black'
-      color = 'white'
-   }
-   return <div color={color} background-color={backgroundColor}> Partitions </div>
+   return activateTab('Partitions', active)
 }
 
 function UsersTab({ active = false }): JSX.Element {
-   let backgroundColor = 'white'
-   let color = 'black'
-   if (active) {
-      backgroundColor = 'black'
-      color = 'white'
-   }
-   return <div color={color} background-color={backgroundColor}> Users      </div>
+   return activateTab('Users', active)
 }
 
 function NetworkTab({ active = false }): JSX.Element {
-   let backgroundColor = 'white'
-   let color = 'black'
-   if (active) {
-      backgroundColor = 'black'
-      color = 'white'
-   }
-   return <div color={color} background-color={backgroundColor}> Network    </div>
+   return activateTab('Network', active)
 }
 
 function SummaryTab({ active = false }): JSX.Element {
-   let backgroundColor = 'white'
-   let color = 'black'
-   if (active) {
-      backgroundColor = 'black'
-      color = 'white'
-   }
-   return <div color={color} background-color={backgroundColor}> Summary    </div>
+   return activateTab('Summary', active)
 }
 
 function InstallTab({ active = false }): JSX.Element {
-   let backgroundColor = 'white'
-   let color = 'black'
-   if (active) {
-      backgroundColor = 'black'
-      color = 'white'
-   }
-   return <div color={color} background-color={backgroundColor}> Install    </div>
+   return activateTab('Install', active)
 }
 
 function FinishTab({ active = false }): JSX.Element {
-   let backgroundColor = 'white'
-   let color = 'black'
-   if (active) {
-      backgroundColor = 'black'
-      color = 'white'
-   }
-   return <div color={color} background-color={backgroundColor}> Finish     </div>
+   return activateTab('Install', active)
 }
