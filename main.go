@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
+
+	// "os/exec"
 	"path/filepath"
 	"sync"
 	"time"
@@ -31,11 +32,11 @@ func main() {
 	if len(os.Args) < 2 {
 		log.Fatalf("Uso: %s /percorso/della/directory/iso\n", os.Args[0])
 	}
-	
+
 	// Valori di default o presi dall'ambiente, esattamente come in Bash
 	config := Config{
 		TargetDir:  os.Args[1],
-		BaseVMID:   getEnvAsInt("VMID", 150),
+		BaseVMID:   getEnvAsInt("VMID", 101),
 		Firmware:   getEnv("FIRMWARE", "bios"),
 		FsType:     getEnv("FSTYPE", "ext4"),
 		Storage:    getEnv("STORAGE", "father-zfs"),
@@ -59,7 +60,7 @@ func main() {
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		// Ogni worker avrà il suo offset per il VMID, per non accavallarsi
-		workerVMID := config.BaseVMID + i 
+		workerVMID := config.BaseVMID + i
 		go worker(workerVMID, config, tasks, &wg)
 	}
 
@@ -83,10 +84,10 @@ func worker(workerVMID int, cfg Config, tasks <-chan IsoTask, wg *sync.WaitGroup
 	for task := range tasks {
 		task.VMID = workerVMID
 		fmt.Printf("[Worker VMID:%d] Inizio collaudo ISO: %s\n", task.VMID, task.IsoName)
-		
+
 		// Qui mettiamo tutta la logica del test (creazione VM, accensione, qm agent, ecc.)
 		success := runIncubatorTest(task, cfg)
-		
+
 		if success {
 			fmt.Printf("[Worker VMID:%d] SUCCESS: %s\n", task.VMID, task.IsoName)
 		} else {
@@ -100,11 +101,11 @@ func runIncubatorTest(task IsoTask, cfg Config) bool {
 	// Simulazione della pulizia vecchia VM
 	// execQmCommand("stop", fmt.Sprintf("%d", task.VMID))
 	// execQmCommand("destroy", fmt.Sprintf("%d", task.VMID))
-	
+
 	// Simulazione creazione e test...
 	time.Sleep(3 * time.Second) // Finge di lavorare
-	
-	return true 
+
+	return true
 }
 
 // Funzioni di utilità per leggere l'ambiente
@@ -119,4 +120,3 @@ func getEnvAsInt(key string, fallback int) int {
 	// Omettiamo per brevità la logica di strconv.Atoi
 	return fallback
 }
-
