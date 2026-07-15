@@ -1,2 +1,2 @@
-go build -o incubator ./cmd/incubator
+go build -o incubator-go ./cmd/incubator
 

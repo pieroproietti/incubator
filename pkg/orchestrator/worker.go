@@ -60,7 +60,7 @@ func Worker(workerVMID int, cfg config.Config, tasks <-chan IsoTask, reports cha
 			fmt.Printf("[Worker VMID:%d] %s: %s\n", task.VMID, report.Status, task.IsoName)
 		} else {
 			report.Status = "❌ FAILED"
-			report.ErrorMsg = "Error during the installation cycle"
+			report.ErrorMsg = "Error during the installation or boot cycle"
 			fmt.Printf("[Worker VMID:%d] %s: %s\n", task.VMID, report.Status, task.IsoName)
 		}
 
@@ -93,7 +93,7 @@ func RunIncubatorTest(task IsoTask, cfg config.Config) bool {
 		args := []string{
 			"create", vmidStr,
 			"--name", "testing-krill-" + cfg.Firmware,
-			"--memory", "4096",
+			"--memory", "2048",
 			"--cores", "2",
 			"--scsihw", "virtio-scsi-single",
 			"--scsi0", cfg.Storage + ":16",
@@ -152,7 +152,7 @@ func RunIncubatorTest(task IsoTask, cfg config.Config) bool {
 	// PHASE 5: Monitoring and Anti-Hang Countermeasures
 	statusFails := 0
 	waited := 0
-	installTimeout := 3600 // 1 hour limit
+	installTimeout := 300 // 5 minutes limit (optimized for minimal <= 2GB distros)
 
 	for {
 		vmStatus, _ := proxmox.RunCommand("qm", "status", vmidStr)
@@ -193,21 +193,65 @@ func RunIncubatorTest(task IsoTask, cfg config.Config) bool {
 					fmt.Printf("%s [ERROR] Krill returned ExitCode: %d\n", logPrefix, status.ExitCode)
 					return false
 				}
-				fmt.Printf("%s Krill script finished successfully. Waiting for shutdown...\n", logPrefix)
+				fmt.Printf("%s Krill script finished successfully. Waiting for autonomous shutdown...\n", logPrefix)
 			}
 		}
 
 		time.Sleep(5 * time.Second)
 		waited += 5
 		if waited >= installTimeout {
-			fmt.Printf("%s [FATAL ERROR] Timeout reached (1 hour). Installation aborted.\n", logPrefix)
+			fmt.Printf("%s [FATAL ERROR] Timeout reached (5 minutes). Installation aborted.\n", logPrefix)
 			proxmox.RunCommand("qm", "stop", vmidStr)
 			return false
 		}
 	}
 
-	// PHASE 6: Site Closure
-	proxmox.RunCommand("qm", "stop", vmidStr)
-	fmt.Printf("%s Test concluded successfully.\n", logPrefix)
+	// =====================================================================
+	// PHASE 6: POST-INSTALLATION BOOT VERIFICATION (VERIFY BOOT)
+	// =====================================================================
+	fmt.Printf("%s 6. Starting post-install verification (Booting from scsi0)...\n", logPrefix)
+
+	// Ensure the VM is fully stopped before starting it again
+	proxmox.RunCommand("qm", "stop", vmidStr, "--timeout", "10")
+
+	// Start the VM from the hard disk
+	_, err = proxmox.RunCommand("qm", "start", vmidStr)
+	if err != nil {
+		fmt.Printf("%s [FATAL ERROR] Failed to start VM from hard disk: %v\n", logPrefix, err)
+		return false
+	}
+
+	// Wait for the agent to come online on the newly installed system
+	fmt.Printf("%s Waiting for the installed system's QEMU Agent to respond...\n", logPrefix)
+	if !proxmox.WaitForAgent(vmidStr, 180) { // 3 minutes timeout for the first boot
+		fmt.Printf("%s [FATAL ERROR] Installed system failed to boot or QEMU Agent is missing/disabled.\n", logPrefix)
+		proxmox.RunCommand("qm", "stop", vmidStr)
+		return false
+	}
+	fmt.Printf("%s Installed system booted successfully! Fetching system diagnostics...\n", logPrefix)
+
+	// Fetch /etc/fstab directly via the running agent
+	fstabOut, err := proxmox.RunCommand("qm", "guest", "exec", vmidStr, "--", "cat", "/etc/fstab")
+	if err == nil {
+		var agentRes proxmox.AgentStatus
+		if json.Unmarshal([]byte(fstabOut), &agentRes) == nil {
+			fmt.Printf("%s --- Installed /etc/fstab ---\n%s\n-------------------------------\n", logPrefix, agentRes.OutData)
+		}
+	}
+
+	// Fetch fastfetch/neofetch system specs
+	specCmd := "if command -v fastfetch >/dev/null 2>&1; then fastfetch --stdout; elif command -v neofetch >/dev/null 2>&1; then neofetch --stdout; else uname -a && grep PRETTY_NAME /etc/os-release; fi"
+	specOut, err := proxmox.RunCommand("qm", "guest", "exec", vmidStr, "--", "/bin/sh", "-c", specCmd)
+	if err == nil {
+		var agentRes proxmox.AgentStatus
+		if json.Unmarshal([]byte(specOut), &agentRes) == nil {
+			fmt.Printf("%s --- Installed System Specs ---\n%s\n--------------------------------\n", logPrefix, agentRes.OutData)
+		}
+	}
+
+	// PHASE 7: Final Cleanup and Shutdown
+	fmt.Printf("%s 7. Shutting down VM and concluding test...\n", logPrefix)
+	proxmox.RunCommand("qm", "stop", vmidStr, "--timeout", "15")
+	fmt.Printf("%s Test concluded successfully with verified boot.\n", logPrefix)
 	return true
 }
