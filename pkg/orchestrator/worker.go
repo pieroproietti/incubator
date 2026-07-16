@@ -97,7 +97,7 @@ func RunIncubatorTest(task IsoTask, cfg config.Config) bool {
 		args := []string{
 			"create", vmidStr,
 			"--name", vmName,
-			"--memory", "1024",
+			"--memory", "2048",
 			"--cores", "1",
 			"--scsihw", "virtio-scsi-single",
 			"--scsi0", cfg.Storage + ":16",

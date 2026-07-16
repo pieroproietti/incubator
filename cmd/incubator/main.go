@@ -44,7 +44,7 @@ func main() {
 
 	numWorkers := cfg.Workers
 	if numWorkers < 1 {
-		numWorkers = 4
+		numWorkers = 2
 	}
 	tasks := make(chan orchestrator.IsoTask, len(isos))
 
