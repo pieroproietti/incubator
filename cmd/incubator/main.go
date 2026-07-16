@@ -28,6 +28,7 @@ func main() {
 		IsoStorage: config.GetEnv("ISO_STORAGE", "father-local"), // Restored!
 		Template:   config.GetEnv("TEMPLATE", ""),
 		Bridge:     config.GetEnv("BRIDGE", "vmbr0"), // Restored!
+		Workers:    config.GetEnvAsInt("WORKERS", 4),
 	}
 
 	isos, err := filepath.Glob(filepath.Join(cfg.TargetDir, "*.iso"))
@@ -41,7 +42,10 @@ func main() {
 	fmt.Printf("Configuration -> Firmware: %s | FsType: %s | Base VMID: %d\n", cfg.Firmware, cfg.FsType, cfg.BaseVMID)
 	fmt.Println("===================================================================")
 
-	const numWorkers = 3
+	numWorkers := cfg.Workers
+	if numWorkers < 1 {
+		numWorkers = 4
+	}
 	tasks := make(chan orchestrator.IsoTask, len(isos))
 
 	// THE MISSING PIPE: Create a channel to collect the reports

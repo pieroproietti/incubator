@@ -15,6 +15,7 @@ type Config struct {
 	IsoStorage string
 	Template   string
 	Bridge     string
+	Workers    int
 }
 
 // GetEnv estrae una stringa o usa il default

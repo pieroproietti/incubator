@@ -81,8 +81,12 @@ func RunIncubatorTest(task IsoTask, cfg config.Config) bool {
 
 	// PHASE 2: Provisioning (with dynamic UEFI/BIOS support)
 	fmt.Printf("%s 2. Configuring new VM (Firmware: %s)...\n", logPrefix, strings.ToUpper(cfg.Firmware))
+	
+	distro := strings.Split(strings.TrimPrefix(task.IsoName, "egg-of-"), "-")[0]
+	vmName := fmt.Sprintf("test-%s-%s-%s", strings.ToLower(cfg.Firmware), strings.ToLower(cfg.FsType), strings.ToLower(distro))
+
 	if cfg.Template != "" {
-		out, err := proxmox.RunCommand("qm", "clone", cfg.Template, vmidStr, "--name", "testing-krill", "--full", "0")
+		out, err := proxmox.RunCommand("qm", "clone", cfg.Template, vmidStr, "--name", vmName, "--full", "0")
 		if err != nil {
 			fmt.Printf("%s [ERROR] Failed template cloning: %v\nProxmox Details: %s\n", logPrefix, err, out)
 			return false
@@ -92,9 +96,9 @@ func RunIncubatorTest(task IsoTask, cfg config.Config) bool {
 		// Dynamic array for common arguments
 		args := []string{
 			"create", vmidStr,
-			"--name", "testing-krill-" + cfg.Firmware,
-			"--memory", "2048",
-			"--cores", "2",
+			"--name", vmName,
+			"--memory", "1024",
+			"--cores", "1",
 			"--scsihw", "virtio-scsi-single",
 			"--scsi0", cfg.Storage + ":16",
 			"--net0", "virtio,bridge=" + cfg.Bridge,
@@ -252,6 +256,7 @@ func RunIncubatorTest(task IsoTask, cfg config.Config) bool {
 	// PHASE 7: Final Cleanup and Shutdown
 	fmt.Printf("%s 7. Shutting down VM and concluding test...\n", logPrefix)
 	proxmox.RunCommand("qm", "stop", vmidStr, "--timeout", "15")
-	fmt.Printf("%s Test concluded successfully with verified boot.\n", logPrefix)
+	fmt.Printf("%s Test concluded successfully with verified boot. Destroying VM...\n", logPrefix)
+	proxmox.RunCommand("qm", "destroy", vmidStr, "--purge", "1", "--destroy-unreferenced-disks", "1")
 	return true
 }
