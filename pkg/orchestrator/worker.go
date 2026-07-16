@@ -81,7 +81,7 @@ func RunIncubatorTest(task IsoTask, cfg config.Config) bool {
 
 	// PHASE 2: Provisioning (with dynamic UEFI/BIOS support)
 	fmt.Printf("%s 2. Configuring new VM (Firmware: %s)...\n", logPrefix, strings.ToUpper(cfg.Firmware))
-	
+
 	distro := strings.Split(strings.TrimPrefix(task.IsoName, "egg-of-"), "-")[0]
 	vmName := fmt.Sprintf("test-%s-%s-%s", strings.ToLower(cfg.Firmware), strings.ToLower(cfg.FsType), strings.ToLower(distro))
 

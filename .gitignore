@@ -1,0 +1,31 @@
+# Binaries and templates
+bin/
+incubator-go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, generated when using -coverprofile
+*.out
+*.prof
+
+# Dependency directories (normally empty unless using shims or vendor)
+vendor/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
