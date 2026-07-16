@@ -72,7 +72,9 @@ func Worker(workerVMID int, cfg config.Config, tasks <-chan IsoTask, reports cha
 // RunIncubatorTest manages the complete lifecycle of the installation test
 func RunIncubatorTest(task IsoTask, cfg config.Config) bool {
 	vmidStr := strconv.Itoa(task.VMID)
-	logPrefix := fmt.Sprintf("[VMID:%s]", vmidStr)
+	distro := strings.Split(strings.TrimPrefix(task.IsoName, "egg-of-"), "-")[0]
+	vmName := fmt.Sprintf("test-%s-%s-%s", strings.ToLower(cfg.Firmware), strings.ToLower(cfg.FsType), strings.ToLower(distro))
+	logPrefix := fmt.Sprintf("[VM %s | %s]", vmidStr, vmName)
 
 	// PHASE 1: Purge
 	fmt.Printf("%s 1. Purging old VM and destroying disks...\n", logPrefix)
@@ -80,10 +82,7 @@ func RunIncubatorTest(task IsoTask, cfg config.Config) bool {
 	proxmox.RunCommand("qm", "destroy", vmidStr, "--purge", "1", "--destroy-unreferenced-disks", "1")
 
 	// PHASE 2: Provisioning (with dynamic UEFI/BIOS support)
-	fmt.Printf("%s 2. Configuring new VM (Firmware: %s)...\n", logPrefix, strings.ToUpper(cfg.Firmware))
-
-	distro := strings.Split(strings.TrimPrefix(task.IsoName, "egg-of-"), "-")[0]
-	vmName := fmt.Sprintf("test-%s-%s-%s", strings.ToLower(cfg.Firmware), strings.ToLower(cfg.FsType), strings.ToLower(distro))
+	fmt.Printf("%s 2. Configuring new VM...\n", logPrefix)
 
 	if cfg.Template != "" {
 		out, err := proxmox.RunCommand("qm", "clone", cfg.Template, vmidStr, "--name", vmName, "--full", "0")
@@ -97,7 +96,7 @@ func RunIncubatorTest(task IsoTask, cfg config.Config) bool {
 		args := []string{
 			"create", vmidStr,
 			"--name", vmName,
-			"--memory", "2048",
+			"--memory", "3072", // minimo per ubuntu
 			"--cores", "1",
 			"--scsihw", "virtio-scsi-single",
 			"--scsi0", cfg.Storage + ":16",

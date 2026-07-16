@@ -28,7 +28,7 @@ func main() {
 		IsoStorage: config.GetEnv("ISO_STORAGE", "father-local"), // Restored!
 		Template:   config.GetEnv("TEMPLATE", ""),
 		Bridge:     config.GetEnv("BRIDGE", "vmbr0"), // Restored!
-		Workers:    config.GetEnvAsInt("WORKERS", 4),
+		Workers:    config.GetEnvAsInt("WORKERS", 2),
 	}
 
 	isos, err := filepath.Glob(filepath.Join(cfg.TargetDir, "*.iso"))
