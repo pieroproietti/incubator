@@ -80,9 +80,11 @@ jobs:
       - name: 📥 Download all artifacts
         uses: actions/download-artifact@v4
         with:
+          pattern: incubator-go-reports-*
           path: artifacts
+          merge-multiple: true
 
       - name: 🔨 Merge Markdown Tables
         run: |
           # Concatenate all retrieved tables into the GitHub step summary
-          cat artifacts/incubator-go-reports-*/incubator-summary-*.md >> $GITHUB_STEP_SUMMARY
+          cat artifacts/incubator-summary-*.md >> $GITHUB_STEP_SUMMARY
